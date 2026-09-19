@@ -18,9 +18,15 @@ class CategoriesService:
         self.db.commit()
         return CategorySchema.model_validate(category_orm)
 
-    def update_task(self, category_id: str, category_update: CategoryUpdateSchema) -> CategorySchema:
-        category_for_update = self.category_repository.get_by_id(category_id=category_id)
-        if category_for_update.title is not None:
-            category_for_update.title = category_for_update.title
-        if category_for_update.completed is not None:
-            category_for_update.completed = category_for_update.completed
+    def update_category(self, category_id: str, category_update: CategoryUpdateSchema) -> CategorySchema:
+        category = self.category_repository.get_by_id(category_id=category_id)
+
+        if category_update.name is not None:
+            category.name = category_update.name
+        self.db.commit()
+        return CategorySchema.model_validate(category)
+
+    def delete_category(self, category_id: str) -> None:
+        category = self.category_repository.get_by_id(category_id=category_id)
+        self.category_repository.delete(category)
+        self.db.commit()

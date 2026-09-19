@@ -3,32 +3,39 @@ from app.repositories.task import TaskRepository
 from app.schemas.task import TaskSchema, TaskCreateSchema, TaskUpdateSchema
 
 
+class TaskNotFoundError(Exception):
+    pass
+
+
 class TaskService:
     def __init__(self, db: Session) -> None:
         self.db = db
-        self.task_repository = TaskRepository(db)
+        self.repository = TaskRepository(db)
 
     def list_tasks(self) -> list[TaskSchema]:
-        tasks_orm = self.task_repository.get_all()
-        return [TaskSchema.model_validate(task) for task in tasks_orm]
+        tasks = self.repository.get_all()
+        return [TaskSchema.model_validate(task) for task in tasks]
 
-    def create_task(self, task_create: TaskCreateSchema) -> TaskSchema:
-        task_orm = self.task_repository.create(title=task_create.title)
+    def create_task(self, payload: TaskCreateSchema) -> TaskSchema:
+        task = self.repository.create(title=payload.title)
         self.db.commit()
-        return TaskSchema.model_validate(task_orm)
+        return TaskSchema.model_validate(task)
 
-    def update_task(self, task_id: str, task_update: TaskUpdateSchema) -> TaskSchema:
-        task_for_update = self.task_repository.get_by_id(task_id=task_id)
-        if task_for_update.title is not None:
-            task_for_update.title = task_for_update.title
-        if task_for_update.completed is not None:
-            task_for_update.completed = task_for_update.completed
-        
+    def update_task(self, task_id: str, payload: TaskUpdateSchema) -> TaskSchema:
+        task = self.repository.get_by_id(task_id=task_id)
+
+        if payload.title is not None:
+            task.title = payload.title
+        if payload.completed is not None:
+            task.completed = payload.completed
+
         self.db.commit()
-        return TaskSchema.model_validate(task_for_update)
-    
+        return TaskSchema.model_validate(task)
+
     def delete_task(self, task_id: str) -> TaskSchema:
-        task_for_delete = self.task_repository.get_by_id(task_id=task_id)
-        self.task_repository.delete(task_for_delete)
+        task = self.repository.get_by_id(task_id=task_id)
+
+        self.repository.delete(task)
+        self.db.commit()
             
     

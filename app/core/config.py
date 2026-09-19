@@ -1,12 +1,14 @@
 from dataclasses import dataclass
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-@dataclass(frozen=True)
-class Settings:
-    DATABASE_URL: str
-    cors_allowed_origins: list[str]
-
-def get_settings() -> Settings:
-    return Settings(
-        DATABASE_URL="postgresql+psycopg://postgres:admin@127.0.0.1:15432/postgres",
-        cors_allowed_origins=["http://localhost:3000"],
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
     )
+
+    DATABASE_URL: str
+    CORS_ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
+
+settings = Settings()
